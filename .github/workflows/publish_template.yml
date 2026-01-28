@@ -1,0 +1,29 @@
+name: Publish Devcontainer Template
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'devcontainer-template.json'
+      - '.devcontainer/**'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Publish Templates
+        uses: devcontainers/action@v1
+        with:
+          publish-templates: "true"
+          base-path-to-templates: "."

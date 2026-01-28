@@ -4,10 +4,21 @@ on:
   push:
     branches:
       - main
-      - dev  # Add other branches you want to build
+      - dev
   pull_request:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      ros_distro:
+        description: 'ROS 2 distribution to build'
+        required: true
+        default: 'jazzy'
+        type: choice
+        options:
+          - humble
+          - jazzy
+          - kilted
 
 env:
   REGISTRY: ghcr.io
@@ -25,6 +36,25 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Determine ROS distro and LTS status
+        run: |
+          LTS_RELEASE=$(jq -r '.ltsRelease' devcontainer-template.json)
+
+          # Use input distro for manual trigger, LTS for automatic
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            ROS_DISTRO="${{ inputs.ros_distro }}"
+          else
+            ROS_DISTRO="$LTS_RELEASE"
+          fi
+          echo "ROS_DISTRO=${ROS_DISTRO}" >> $GITHUB_ENV
+
+          # Check if building LTS
+          if [ "$ROS_DISTRO" = "$LTS_RELEASE" ]; then
+            echo "IS_LTS=true" >> $GITHUB_ENV
+          else
+            echo "IS_LTS=false" >> $GITHUB_ENV
+          fi
 
       - name: Set lowercase image name
         run: echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
@@ -48,12 +78,12 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            # Branch name tag (e.g., main, dev)
-            type=ref,event=branch
-            # Short commit SHA (e.g., sha-a1b2c3d)
-            type=sha,prefix=sha-,format=short
-            # "latest" tag only for main branch
-            type=raw,value=latest,enable={{is_default_branch}}
+            # ROS distro tag (e.g., jazzy)
+            type=raw,value=${{ env.ROS_DISTRO }}
+            # "latest" tag only for main branch AND if IS_LTS is true
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' && env.IS_LTS == 'true' }}
+            # "lts" tag only for main branch AND if IS_LTS is true
+            type=raw,value=lts,enable=${{ github.ref == 'refs/heads/main' && env.IS_LTS == 'true' }}
 
       - name: Build and push Docker image
         id: push
@@ -64,6 +94,8 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            ROS_DISTRO=${{ env.ROS_DISTRO }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

@@ -1,4 +1,8 @@
-FROM ros:jazzy-ros-base
+ARG ROS_DISTRO=jazzy
+FROM ros:${ROS_DISTRO}-ros-base
+
+# Re-declare ARG after FROM (build args are reset after FROM)
+ARG ROS_DISTRO=jazzy
 
 SHELL ["/bin/bash", "-c"]
 
@@ -11,11 +15,11 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   ripgrep \
   python3-colcon-common-extensions \
   python3-rosdep \
-  ros-jazzy-navigation2 \
-  ros-jazzy-nav2-bringup \
-  ros-jazzy-rviz2 \
-  ros-jazzy-ros-gz-bridge \
-  ros-jazzy-ros-gz-sim \
+  ros-${ROS_DISTRO}-navigation2 \
+  ros-${ROS_DISTRO}-nav2-bringup \
+  ros-${ROS_DISTRO}-rviz2 \
+  ros-${ROS_DISTRO}-ros-gz-bridge \
+  ros-${ROS_DISTRO}-ros-gz-sim \
   tigervnc-standalone-server \
   tigervnc-common \
   novnc \
@@ -34,7 +38,7 @@ RUN curl https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyri
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] https://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
 RUN apt-get update && apt-get install -y gz-harmonic && rm -rf /var/lib/apt/lists/*
 
-RUN echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc
+RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
 RUN rosdep init || true
 
 # Configure VNC directory

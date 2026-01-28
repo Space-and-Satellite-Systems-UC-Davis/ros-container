@@ -1,11 +1,14 @@
 {
-  "name": "Perception-Playground (ROS 2 Jazzy + Nav2)",
+  "name": "ROS 2 ${templateOption:rosDistro} + Nav2",
   "build": {
-		"dockerfile": "Dockerfile"
-	},
+    "dockerfile": "Dockerfile",
+    "args": {
+      "ROS_DISTRO": "${templateOption:rosDistro}"
+    }
+  },
   "initializeCommand": "bash -lc 'if [ ! -f .devcontainer/.env ]; then cp .devcontainer/.env.example .devcontainer/.env; fi'",
   "remoteEnv": {
-    "ROS_DISTRO": "jazzy",
+    "ROS_DISTRO": "${templateOption:rosDistro}",
     "DISPLAY": ":1",
     "VNC_PASSWORD": "${localEnv:VNC_PASSWORD}"
   },
