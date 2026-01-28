@@ -1,17 +1,19 @@
 name: Publish Devcontainer Template
 
 on:
-  push:
+  # Run after docker build completes successfully
+  workflow_run:
+    workflows: ["Build and Push Docker Image"]
+    types:
+      - completed
     branches:
       - main
-    paths:
-      - 'devcontainer-template.json'
-      - '.devcontainer/**'
   workflow_dispatch:
 
 jobs:
   publish:
-    if: github.ref == 'refs/heads/main'
+    # Only run if docker build succeeded (or manual trigger)
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -27,3 +29,5 @@ jobs:
         with:
           publish-templates: "true"
           base-path-to-templates: "."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
