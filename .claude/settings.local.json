@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.docker.com)",
+      "WebFetch(domain:containers.dev)",
+      "WebFetch(domain:github.com)",
+      "WebSearch"
+    ]
+  }
+}

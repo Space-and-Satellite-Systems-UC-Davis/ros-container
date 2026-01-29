@@ -1,0 +1,35 @@
+{
+  "id": "ros-devcontainer",
+  "version": "1.0.0",
+  "name": "ROS 2 Development Container",
+  "description": "ROS 2 development environment with optional Nav2, Gazebo, MoveIt, and VNC desktop",
+  "publisher": "Space-and-Satellite-Systems-UC-Davis",
+  "documentationURL": "https://github.com/Space-and-Satellite-Systems-UC-Davis/ros-container",
+  "licenseURL": "https://github.com/Space-and-Satellite-Systems-UC-Davis/ros-container/blob/main/LICENSE",
+  "platforms": ["linux/amd64", "linux/arm64"],
+  "keywords": ["ros", "ros2", "nav2", "gazebo", "moveit", "robotics", "navigation"],
+  "options": {
+    "rosDistro": {
+      "type": "string",
+      "description": "ROS 2 distribution to use",
+      "proposals": ["kilted", "jazzy", "humble"],
+      "default": "jazzy"
+    },
+    "installNav2AndSimulation": {
+      "type": "boolean",
+      "default": true,
+      "description": "Install Nav2 navigation stack with Gazebo and RViz"
+    },
+    "installMoveit": {
+      "type": "boolean",
+      "default": false,
+      "description": "Install MoveIt 2 motion planning framework"
+    },
+    "installVnc": {
+      "type": "boolean",
+      "default": true,
+      "description": "Install TigerVNC with XFCE desktop environment"
+    }
+  },
+  "ltsRelease": "jazzy"
+}

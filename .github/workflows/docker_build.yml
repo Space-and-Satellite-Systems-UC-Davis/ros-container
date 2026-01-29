@@ -38,7 +38,7 @@ jobs:
       - name: Determine ROS distro and LTS status
         id: config
         run: |
-          LTS_RELEASE=$(jq -r '.ltsRelease' devcontainer-template.json)
+          LTS_RELEASE=$(jq -r '.ltsRelease' src/ros-devcontainer/devcontainer-template.json)
 
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             ROS_DISTRO="${{ inputs.ros_distro }}"
@@ -106,7 +106,7 @@ jobs:
         id: build
         uses: docker/build-push-action@v6
         with:
-          context: .devcontainer
+          context: src/ros-devcontainer/.devcontainer
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
           tags: ${{ env.REGISTRY }}/${{ needs.prepare.outputs.image_name }}

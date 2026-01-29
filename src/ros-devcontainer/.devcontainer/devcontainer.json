@@ -1,0 +1,36 @@
+{
+  "name": "ROS 2 ${templateOption:rosDistro}",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "ROS_DISTRO": "${templateOption:rosDistro}",
+      "INSTALL_NAV2_AND_SIMULATION": "${templateOption:installNav2AndSimulation}",
+      "INSTALL_MOVEIT": "${templateOption:installMoveit}",
+      "INSTALL_VNC": "${templateOption:installVnc}"
+    }
+  },
+  "remoteEnv": {
+    "ROS_DISTRO": "${templateOption:rosDistro}",
+    "DISPLAY": ":1"
+  },
+  "forwardPorts": [5901],
+  "portsAttributes": {
+    "5901": {
+      "label": "VNC",
+      "onAutoForward": "notify"
+    }
+  },
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-iot.vscode-ros",
+        "ms-python.python"
+      ]
+    }
+  },
+  "workspaceFolder": "/workspace",
+  "postStartCommand": "if command -v start-vnc.sh &> /dev/null; then start-vnc.sh; fi"
+}

@@ -1,118 +1,99 @@
-# Pushing Docker Images to GitHub Container Registry (GHCR)
+# ROS 2 + Nav2 Devcontainer Template
 
-This guide documents the process to authenticate and push Docker images to the Space and Satellite Systems UC Davis GitHub Container Registry.
+A [devcontainer template](https://containers.dev/implementors/templates/) for ROS 2 development with Nav2 navigation stack, Gazebo simulation, and VNC desktop access.
 
-Note that whenever changes are made to the repo, the image is automatically rebuild by github action. A non-LTS distro image can also be build manually via manually trigging the github action workflow.
+## Features
 
-## Prerequisites
+- ROS 2 with Nav2 navigation stack pre-installed
+- Gazebo simulator (version matched to ROS distro)
+- VNC desktop access via noVNC (browser-based)
+- Multi-architecture support (amd64/arm64)
+- VS Code extensions for ROS development
 
-- Docker/Compatible runtime installed and running
-- A GitHub account with access to the [Space-and-Satellite-Systems-UC-Davis](https://github.com/Space-and-Satellite-Systems-UC-Davis) organization
-- A GitHub Personal Access Token (Classic) with appropriate permissions. If you don't have one, Follow this [link](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic) to get one.
+## Quick Start
 
-## 1. Store the Token in `.env`
+### VS Code
 
-Create or update your `.env` file in the `.devcontainer` directory:
+1. Install the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+2. Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
+3. Select **Dev Containers: Add Dev Container Configuration Files...**
+4. Select **Show All Definitions...**
+5. Search for `ros-devcontainer` or browse community templates
+6. Choose your ROS distribution when prompted
 
-```bash
-# .devcontainer/.env
-GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-GITHUB_USERNAME=your-github-username
-```
+### CLI
 
-> **Important:** Never commit `.env` files containing secrets to version control.
-
-## 2. Authenticate with GHCR
-
-Use the token stored in your `.env` file to authenticate with GitHub Container Registry:
-
-```bash
-# Load environment variables
-source .env
-
-# Login to GHCR
-echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin
-```
-
-You should see: `Login Succeeded`
-
-## 3. Build and Tag the Image
-
-Build your Docker image and tag it for GHCR:
+Using the [devcontainer CLI](https://github.com/devcontainers/cli):
 
 ```bash
-# Build the image
-docker build -t ros_container:latest .
+# Apply the template to your project
+devcontainer templates apply \
+  --template-id ghcr.io/space-and-satellite-systems-uc-davis/ros-devcontainer
 
-# Tag for GHCR (organization name must be lowercase)
-docker tag ros_container:latest ghcr.io/space-and-satellite-systems-uc-davis/ros_container:latest
+# Or specify a ROS distribution
+devcontainer templates apply \
+  --template-id ghcr.io/space-and-satellite-systems-uc-davis/ros-devcontainer \
+  --template-args '{"rosDistro": "humble"}'
 ```
 
-### Tagging the image
+## Configuration Options
 
-The image are tagged with the name of the distro, and also the latest and lts tag for the lts images. Below is how you would tag a image, where the string of number is the image id found though `docker image list`. 
+| Option | Description | Default | Choices |
+|--------|-------------|---------|---------|
+| `rosDistro` | ROS 2 distribution to use | `jazzy` | `humble`, `jazzy`, `kilted` |
 
-For more details see the [workflow file](.github/workflows/docker_build.yml) and also below contains a example script to run the entire process.
+### Gazebo Versions
+
+Each ROS distribution is paired with a specific Gazebo version:
+
+| ROS Distro | Gazebo Version |
+|------------|----------------|
+| Humble | Fortress |
+| Jazzy | Harmonic |
+| Kilted | Ionic |
+
+## Using the Container
+
+### VNC Desktop Access
+
+The container includes a VNC server with noVNC for browser-based desktop access:
+
+1. Start the devcontainer
+2. Open http://localhost:6080/vnc.html in your browser
+3. No password is required by default
+
+The VNC server runs on port 5901, and noVNC is available on port 6080.
+
+### ROS 2 Development
+
+The container sources `/opt/ros/<distro>/setup.bash` automatically. Your workspace is mounted at `/workspace`.
 
 ```bash
-docker tag 0e850d2e62eb ghcr.io/space-and-satellite-systems-uc-davis/ros_container:latest
+# Build your packages
+cd /workspace
+colcon build
+
+# Source your workspace
+source install/setup.bash
 ```
 
-## 4. Push the Image
+## Pre-built Docker Images
+
+Pre-built images are available for direct use:
 
 ```bash
-docker push ghcr.io/space-and-satellite-systems-uc-davis/ros_container:latest
+# Latest LTS (Jazzy)
+docker pull ghcr.io/space-and-satellite-systems-uc-davis/ros-container:latest
+
+# Specific distribution
+docker pull ghcr.io/space-and-satellite-systems-uc-davis/ros-container:jazzy
+docker pull ghcr.io/space-and-satellite-systems-uc-davis/ros-container:humble
 ```
 
-To push all tags:
+## Development
 
-```bash
-docker push ghcr.io/space-and-satellite-systems-uc-davis/ros_container --all-tags
-```
+See [DEVELOPMENT.md](DEVELOPMENT.md) for instructions on building and modifying the Docker images.
 
-## 5. Verify the Push
+## License
 
-After pushing, verify your image is available at:
-https://github.com/orgs/Space-and-Satellite-Systems-UC-Davis/packages/container/package/ros_container
-
-## Quick Reference Script
-
-Create a script `push-to-ghcr.sh` for convenience:
-
-```bash
-#!/bin/bash
-set -e
-
-# Load credentials
-source .env
-
-# Configuration
-IMAGE_NAME="ros_container"
-REGISTRY="ghcr.io/space-and-satellite-systems-uc-davis"
-
-# Login
-echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USERNAME --password-stdin
-
-# Tag and push
-docker tag ${IMAGE_NAME}:latest ${REGISTRY}/${IMAGE_NAME}:latest
-docker push ${REGISTRY}/${IMAGE_NAME}:latest
-
-echo "Successfully pushed ${REGISTRY}/${IMAGE_NAME}:latest"
-```
-
-## Troubleshooting
-
-### "owner not found" Error
-
-This usually means a typo in the organization name. Ensure you use:
-- `space-and-satellite-systems-uc-davis` (all lowercase, correct spelling)
-
-### "unauthorized" or "denied" Error
-
-1. Verify your token has `write:packages` scope
-2. Ensure you're a member of the organization with package write permissions
-3. Re-authenticate: `docker logout ghcr.io` then login again
-
-### "name unknown" Error
-
-The package may not exist yet. The first push creates it automatically if you have the correct permissions.
+[MIT](LICENSE)
