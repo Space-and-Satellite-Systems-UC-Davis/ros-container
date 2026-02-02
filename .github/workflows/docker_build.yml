@@ -108,10 +108,15 @@ jobs:
         with:
           context: src/ros-devcontainer/.devcontainer
           platforms: ${{ matrix.platform }}
-          labels: ${{ steps.meta.outputs.labels }}
+          labels: |
+            ${{ steps.meta.outputs.labels }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
           tags: ${{ env.REGISTRY }}/${{ needs.prepare.outputs.image_name }}
           build-args: |
             ROS_DISTRO=${{ needs.prepare.outputs.ros_distro }}
+            INSTALL_NAV2_AND_SIMULATION=true
+            INSTALL_MOVEIT=true
+            INSTALL_VNC=true
           outputs: type=image,push-by-digest=true,name-canonical=true,push=${{ github.event_name != 'pull_request' }}
           cache-from: type=gha,scope=${{ env.PLATFORM_PAIR }}
           cache-to: type=gha,mode=max,scope=${{ env.PLATFORM_PAIR }}

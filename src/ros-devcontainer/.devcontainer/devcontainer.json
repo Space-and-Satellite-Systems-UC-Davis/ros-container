@@ -1,14 +1,6 @@
 {
   "name": "ROS 2 ${templateOption:rosDistro}",
-  "build": {
-    "dockerfile": "Dockerfile",
-    "args": {
-      "ROS_DISTRO": "${templateOption:rosDistro}",
-      "INSTALL_NAV2_AND_SIMULATION": "${templateOption:installNav2AndSimulation}",
-      "INSTALL_MOVEIT": "${templateOption:installMoveit}",
-      "INSTALL_VNC": "${templateOption:installVnc}"
-    }
-  },
+  "image": "ghcr.io/space-and-satellite-systems-uc-davis/ros-container:${templateOption:rosDistro}",
   "remoteEnv": {
     "ROS_DISTRO": "${templateOption:rosDistro}",
     "DISPLAY": ":1"
