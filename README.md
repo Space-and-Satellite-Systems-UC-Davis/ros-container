@@ -28,11 +28,11 @@ Using the [devcontainer CLI](https://github.com/devcontainers/cli):
 ```bash
 # Apply the template to your project
 devcontainer templates apply \
-  --template-id ghcr.io/space-and-satellite-systems-uc-davis/ros-devcontainer
+  --template-id ghcr.io/space-and-satellite-systems-uc-davis/ros-container/ros-devcontainer
 
 # Or specify a ROS distribution
 devcontainer templates apply \
-  --template-id ghcr.io/space-and-satellite-systems-uc-davis/ros-devcontainer \
+  --template-id ghcr.io/space-and-satellite-systems-uc-davis/ros-container/ros-devcontainer \
   --template-args '{"rosDistro": "humble"}'
 ```
 
