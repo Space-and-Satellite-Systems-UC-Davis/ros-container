@@ -47,7 +47,23 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     if [ "${INSTALL_MOVEIT}" = "true" ]; then \
         apt-get update && \
-        apt-get install -y --no-install-recommends ros-${ROS_DISTRO}-moveit; \
+        apt-get install -y --no-install-recommends \
+            ros-${ROS_DISTRO}-moveit \
+            ros-jazzy-moveit-visual-tools \
+            ros-jazzy-rviz-visual-tools \
+            ros-jazzy-moveit-task-constructor-core \
+            ros-jazzy-warehouse-ros-sqlite \
+            ros-jazzy-moveit-resources-panda-moveit-config \
+            ros-jazzy-moveit-py \
+            ros-jazzy-ros2-control \
+            ros-jazzy-controller-manager \
+            ros-jazzy-joint-trajectory-controller \
+            ros-jazzy-joint-state-broadcaster \
+            ros-jazzy-joint-state-publisher \
+            ros-jazzy-robot-state-publisher \
+            ros-jazzy-rviz2 \
+            ros-jazzy-xacro \
+            ros-jazzy-joy; \
     fi
 
 # VNC + XFCE - conditional
