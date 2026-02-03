@@ -49,21 +49,21 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         apt-get update && \
         apt-get install -y --no-install-recommends \
             ros-${ROS_DISTRO}-moveit \
-            ros-jazzy-moveit-visual-tools \
-            ros-jazzy-rviz-visual-tools \
-            ros-jazzy-moveit-task-constructor-core \
-            ros-jazzy-warehouse-ros-sqlite \
-            ros-jazzy-moveit-resources-panda-moveit-config \
-            ros-jazzy-moveit-py \
-            ros-jazzy-ros2-control \
-            ros-jazzy-controller-manager \
-            ros-jazzy-joint-trajectory-controller \
-            ros-jazzy-joint-state-broadcaster \
-            ros-jazzy-joint-state-publisher \
-            ros-jazzy-robot-state-publisher \
-            ros-jazzy-rviz2 \
-            ros-jazzy-xacro \
-            ros-jazzy-joy; \
+            ros-${ROS_DISTRO}-moveit-visual-tools \
+            ros-${ROS_DISTRO}-rviz-visual-tools \
+            ros-${ROS_DISTRO}-moveit-task-constructor-core \
+            ros-${ROS_DISTRO}-warehouse-ros-sqlite \
+            ros-${ROS_DISTRO}-moveit-resources-panda-moveit-config \
+            ros-${ROS_DISTRO}-moveit-py \
+            ros-${ROS_DISTRO}-ros2-control \
+            ros-${ROS_DISTRO}-controller-manager \
+            ros-${ROS_DISTRO}-joint-trajectory-controller \
+            ros-${ROS_DISTRO}-joint-state-broadcaster \
+            ros-${ROS_DISTRO}-joint-state-publisher \
+            ros-${ROS_DISTRO}-robot-state-publisher \
+            ros-${ROS_DISTRO}-rviz2 \
+            ros-${ROS_DISTRO}-xacro \
+            ros-${ROS_DISTRO}-joy; \
     fi
 
 # VNC + XFCE - conditional
