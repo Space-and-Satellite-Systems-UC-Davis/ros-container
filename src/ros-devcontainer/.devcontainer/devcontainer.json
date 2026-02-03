@@ -19,7 +19,10 @@
     "vscode": {
       "extensions": [
         "ms-iot.vscode-ros",
-        "ms-python.python"
+        "ms-python.python",
+        "ms-vscode.cmake-tools",
+        "ranch-hand-robotics.rde-pack",
+
       ]
     }
   },
