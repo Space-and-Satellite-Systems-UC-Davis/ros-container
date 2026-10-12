@@ -5,10 +5,14 @@
     "ROS_DISTRO": "${templateOption:rosDistro}",
     "DISPLAY": ":1"
   },
-  "forwardPorts": [5901],
+  "forwardPorts": [5901, 6080],
   "portsAttributes": {
     "5901": {
-      "label": "VNC",
+      "label": "TigerVNC",
+      "onAutoForward": "notify"
+    },
+    "6080": {
+      "label": "noVNC",
       "onAutoForward": "notify"
     }
   },
@@ -27,5 +31,5 @@
     }
   },
   "workspaceFolder": "/workspace",
-  "postStartCommand": "if command -v start-vnc.sh &> /dev/null; then start-vnc.sh; fi"
+  "postStartCommand": "if command -v start-vnc.sh >/dev/null 2>&1; then nohup start-vnc.sh >/tmp/vnc-startup.log 2>&1 </dev/null & fi"
 }

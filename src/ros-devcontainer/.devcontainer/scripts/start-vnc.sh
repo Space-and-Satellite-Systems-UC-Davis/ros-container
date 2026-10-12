@@ -17,9 +17,9 @@ tigervncserver :1 \
 sleep 3
 
 echo "=========================================="
-echo "VNC server ready!"
-echo "Connect with VNC client to: localhost:5901"
+echo "TigerVNC server ready on port 5901"
+echo "noVNC available at http://localhost:6080/vnc.html"
 echo "No password required"
 echo "=========================================="
 
-wait
+exec websockify --web=/usr/share/novnc 6080 127.0.0.1:5901

@@ -54,7 +54,7 @@ docker run -it --rm \
   -p 5901:5901 \
   ros-container:jazzy
 
-# Start VNC server inside the container
+# Start TigerVNC and the noVNC web proxy inside the container
 start-vnc.sh
 ```
 
@@ -92,21 +92,40 @@ docker push ghcr.io/space-and-satellite-systems-uc-davis/ros-container:jazzy
 
 ### Automatic Builds
 
-The `docker_build.yml` workflow automatically builds and pushes Docker images when:
+The `docker_build.yml` workflow builds images for both supported architectures when:
 
-- Changes are pushed to `main` or `dev` branches
-- A pull request targets `main`
+- Changes are pushed to `main`, `dev`, or `staging`
+- A pull request targets `main` (validation build; it does not publish an image)
+- The weekly schedule runs (from the default branch, building the `staging` branch)
 
-The LTS distribution (currently Jazzy) is built by default and tagged as `latest` and `lts`.
+Only pushes to `main` publish the stable distro tag (currently `jazzy`) and, for the LTS distro, `latest` and `lts`. Pushes to `dev` publish `dev-<distro>`; pushes to `staging`, scheduled runs, and manual runs publish `staging-<distro>`. Scheduled runs disable the build cache and run `apt-get update` plus `apt-get upgrade`, refreshing apt indexes and installed OS packages before the image is published.
 
 ### Manual Builds
 
-To build a non-LTS distribution:
+To build a staging image manually:
 
 1. Go to **Actions** > **Build and Push Docker Image**
-2. Click **Run workflow**
+2. Click **Run workflow** and select the `staging` branch (or another source branch you want to test)
 3. Select the desired ROS distribution
 4. Click **Run workflow**
+
+The result is published as `staging-<distro>`; manual runs do not replace the stable distro tags.
+
+### Staging and Weekly Refresh
+
+Create a `staging` branch from `main` after this workflow change is merged. Push candidate Dockerfile changes to `staging`; CI publishes tags such as `ghcr.io/space-and-satellite-systems-uc-davis/ros-container:staging-jazzy`. Every Monday at 06:27 UTC, the scheduled workflow checks out `staging`, rebuilds the LTS distro without cached build layers, and refreshes the corresponding staging tag. The schedule is defined on the default branch, as required by GitHub Actions, so the `staging` branch must exist before the first scheduled run.
+
+A tester can try the staging image (including on Windows with Docker Desktop) without changing the stable image:
+
+```bash
+docker pull ghcr.io/space-and-satellite-systems-uc-davis/ros-container:staging-jazzy
+docker run -d --name ros-staging \
+  -p 5901:5901 -p 6080:6080 \
+  ghcr.io/space-and-satellite-systems-uc-davis/ros-container:staging-jazzy \
+  start-vnc.sh
+```
+
+Open `http://localhost:6080/vnc.html` to test. Remove the test container with `docker rm -f ros-staging`. Only after testing should changes be merged to `main`, whose successful build updates the stable tags.
 
 ### Template Publishing
 
@@ -114,7 +133,7 @@ The `publish_template.yml` workflow publishes the devcontainer template to GHCR 
 
 ## Multi-Architecture Builds
 
-The GitHub Actions workflow builds images for both `linux/amd64` and `linux/arm64` architectures using native runners:
+The GitHub Actions workflow builds images for both `linux/amd64` and `linux/arm64` architectures using native runners. The Dockerfile uses the multi-architecture `ros:<distro>-ros-base` image and installs `ros-<distro>-desktop` from apt, so the resulting image includes the ROS desktop metapackage on both architectures. The OSRF `osrf/ros:<distro>-desktop` image tag currently resolves to a single-platform image, so it is not used as the base.
 
 - `ubuntu-latest` for amd64
 - `ubuntu-24.04-arm` for arm64
