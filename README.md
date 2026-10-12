@@ -6,7 +6,7 @@ A [devcontainer template](https://containers.dev/implementors/templates/) for RO
 
 - ROS 2 with Nav2 navigation stack pre-installed
 - Gazebo simulator (version matched to ROS distro)
-- VNC desktop access via noVNC (browser-based)
+- VNC desktop access via TigerVNC (port 5901) and noVNC (browser-based, port 6080)
 - Multi-architecture support (amd64/arm64)
 - VS Code extensions for ROS development
 
@@ -62,7 +62,7 @@ The container includes a VNC server with noVNC for browser-based desktop access:
 2. Open http://localhost:6080/vnc.html in your browser
 3. No password is required by default
 
-The VNC server runs on port 5901, and noVNC is available on port 6080.
+TigerVNC listens on port **5901** for native VNC clients. The container runs noVNC/websockify on port **6080**; open **http://localhost:6080/vnc.html** in a browser.
 
 ### ROS 2 Development
 

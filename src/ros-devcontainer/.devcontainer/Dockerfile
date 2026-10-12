@@ -12,11 +12,13 @@ SHELL ["/bin/bash", "-c"]
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
     git \
     ripgrep \
     python3-colcon-common-extensions \
-    python3-rosdep
+    python3-rosdep \
+    ros-${ROS_DISTRO}-desktop
 
 # Nav2 + Simulation (Gazebo + RViz) - conditional
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -77,6 +79,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get install -y --no-install-recommends \
     tigervnc-standalone-server \
     tigervnc-common \
+    novnc \
+    python3-websockify \
     xfce4 \
     xfce4-terminal \
     dbus-x11 \
@@ -97,4 +101,4 @@ RUN chmod +x /root/.vnc/xstartup /usr/local/bin/start-vnc.sh || true
 
 ENV DISPLAY=:1
 
-EXPOSE 5901
+EXPOSE 5901 6080

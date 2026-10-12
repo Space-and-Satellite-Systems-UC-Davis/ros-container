@@ -5,9 +5,13 @@ on:
     branches:
       - main
       - dev
+      - staging
   pull_request:
     branches:
       - main
+  schedule:
+    # Weekly refresh of the staging image (06:27 UTC every Monday).
+    - cron: '27 6 * * 1'
   workflow_dispatch:
     inputs:
       ros_distro:
@@ -31,16 +35,25 @@ jobs:
       ros_distro: ${{ steps.config.outputs.ros_distro }}
       is_lts: ${{ steps.config.outputs.is_lts }}
       image_name: ${{ steps.config.outputs.image_name }}
+      source_ref: ${{ steps.config.outputs.source_ref }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Determine ROS distro and LTS status
         id: config
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          WORKFLOW_REF: ${{ github.ref }}
         run: |
           LTS_RELEASE=$(jq -r '.ltsRelease' src/ros-devcontainer/devcontainer-template.json)
+          SOURCE_REF="$WORKFLOW_REF"
 
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if [ "$EVENT_NAME" = "schedule" ]; then
+            SOURCE_REF="refs/heads/staging"
+          fi
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             ROS_DISTRO="${{ inputs.ros_distro }}"
           else
             ROS_DISTRO="$LTS_RELEASE"
@@ -57,6 +70,7 @@ jobs:
           echo "ros_distro=${ROS_DISTRO}" >> $GITHUB_OUTPUT
           echo "is_lts=${IS_LTS}" >> $GITHUB_OUTPUT
           echo "image_name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
+          echo "source_ref=${SOURCE_REF}" >> $GITHUB_OUTPUT
 
   # Build each platform on native runner
   build:
@@ -82,6 +96,8 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.source_ref }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -108,6 +124,7 @@ jobs:
         with:
           context: src/ros-devcontainer/.devcontainer
           platforms: ${{ matrix.platform }}
+          no-cache: ${{ github.event_name == 'schedule' }}
           labels: |
             ${{ steps.meta.outputs.labels }}
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
@@ -174,9 +191,11 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ needs.prepare.outputs.image_name }}
           tags: |
-            type=raw,value=${{ needs.prepare.outputs.ros_distro }}
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' && needs.prepare.outputs.is_lts == 'true' }}
-            type=raw,value=lts,enable=${{ github.ref == 'refs/heads/main' && needs.prepare.outputs.is_lts == 'true' }}
+            type=raw,value=${{ needs.prepare.outputs.ros_distro }},enable=${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+            type=raw,value=latest,enable=${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.prepare.outputs.is_lts == 'true' }}
+            type=raw,value=lts,enable=${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.prepare.outputs.is_lts == 'true' }}
+            type=raw,value=staging-${{ needs.prepare.outputs.ros_distro }},enable=${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/staging' }}
+            type=raw,value=dev-${{ needs.prepare.outputs.ros_distro }},enable=${{ github.ref == 'refs/heads/dev' }}
 
       - name: Create manifest list and push
         working-directory: ${{ runner.temp }}/digests
@@ -187,12 +206,14 @@ jobs:
       - name: Get manifest digest
         id: manifest
         run: |
-          DIGEST=$(docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ needs.prepare.outputs.image_name }}:${{ needs.prepare.outputs.ros_distro }} --format '{{json .Manifest.Digest}}' | tr -d '"')
+          IMAGE_TAG=$(head -n 1 <<< '${{ steps.meta.outputs.tags }}')
+          DIGEST=$(docker buildx imagetools inspect "$IMAGE_TAG" --format '{{json .Manifest.Digest}}' | tr -d '"')
+          echo "tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
           echo "digest=${DIGEST}" >> $GITHUB_OUTPUT
 
       - name: Inspect image
         run: |
-          docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ needs.prepare.outputs.image_name }}:${{ needs.prepare.outputs.ros_distro }}
+          docker buildx imagetools inspect '${{ steps.manifest.outputs.tag }}'
 
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v1
